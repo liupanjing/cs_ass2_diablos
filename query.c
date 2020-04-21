@@ -55,7 +55,40 @@ Query startQuery(Reln r, char *q, char sigs)
 void scanAndDisplayMatchingTuples(Query q)
 {
 	assert(q != NULL);
-	//TODO
+	Reln r = q -> rel;
+	//写在哪个文件里
+	File datFile = dataFile(r);
+	Count totalPages = nPages(r);
+	q ->curpage = 0;
+	//开始遍历
+	while(q ->curpage <totalPages){
+		if(bitIsSet(q ->pages,q ->curpage) == FALSE)
+			continue;
+		//这个page有可能是我想要的
+		if(bitIsSet(q -> pages , q)){
+			Page cur_page = getPage(datFile,q->curpage);
+			Count totalTuples = pageNitems(cur_page);
+			q ->curtup = 0;
+			Count matches = 0;
+			while(q -> curtup < totalTuples){
+				//获取每一个url
+				Tuple cur_tuple = getTupleFromPage(r,cur_page,q->curtup);
+				//如果匹配上
+				if(tupleMatch(r,cur_tuple,q->qstring)){
+					showTuple(r,cur_tuple);
+					matches++;
+				}
+				q -> curpage++;
+				q -> ntuples++;
+			}
+			if (matches == 0){
+				q -> nfalse++;
+			}
+			//一共扫描多少page
+			q -> ntuppages++;
+		}
+		q -> curpage++;
+	}
 }
 
 // print statistics on query
